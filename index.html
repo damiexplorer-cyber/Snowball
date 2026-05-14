@@ -109,8 +109,8 @@ textarea.fi{resize:none;line-height:1.5}
 .goal-block-hdr:hover .drag-handle span{background:var(--w70)}
 .gdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .gname{font-size:.95rem;font-weight:800;color:var(--w);flex:1}
-.gcollapse{font-size:.75rem;color:var(--w70);transition:transform .2s;padding:4px 8px;border:none;background:none;cursor:pointer}
-.gcollapse.open{transform:rotate(180deg)}
+.gcollapse{font-size:.68rem;font-weight:700;color:var(--acc);border:none;background:none;cursor:pointer;padding:0;font-family:var(--f);flex-shrink:0}
+
 .goal-block-body{border-top:1px solid var(--w20);padding:10px 14px 14px}
 .week-card{background:var(--w10);border:1px solid var(--w20);border-radius:var(--rmd);padding:11px 13px;margin-bottom:8px}
 .wct{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -303,6 +303,13 @@ textarea.fi{resize:none;line-height:1.5}
       <div class="ph"><div class="pt">목표 설정</div><div class="ps">이번 달 이루고 싶은 목표를 3개 이상 입력하세요</div></div>
       <div class="card">
         <div class="col-labels"><span>목표</span><span style="text-align:center">난이도</span><span style="text-align:center">중요도</span><span></span></div>
+        <div style="font-size:.7rem;color:var(--w70);font-weight:600;margin-bottom:10px;margin-top:-2px">난이도 · 중요도는 1~10점으로 입력해주세요</div>
+      <div style="display:grid;grid-template-columns:1fr 72px 72px 36px;gap:8px;margin-bottom:8px;padding:0 2px">
+        <span></span>
+        <span style="text-align:center;font-size:.62rem;color:var(--w70);font-weight:600">10점 만점</span>
+        <span style="text-align:center;font-size:.62rem;color:var(--w70);font-weight:600">10점 만점</span>
+        <span></span>
+      </div>
         <div id="goals-list"></div>
         <button class="add-btn" id="add-goal-btn" onclick="addGoalRow()">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> 목표 추가
@@ -330,7 +337,7 @@ textarea.fi{resize:none;line-height:1.5}
 
     <!-- WEEKLY -->
     <div id="page-weekly" class="page">
-      <div class="ph"><div class="pt">주간 계획</div><div class="ps">드래그로 순서 변경 · ▾ 로 접기</div></div>
+      <div class="ph"><div class="pt">주간 계획</div><div class="ps">드래그로 순서 변경 · 토글 버튼으로 펼쳐서 계획 세우기</div></div>
       <div id="weekly-content"></div>
     </div>
 
@@ -369,6 +376,16 @@ textarea.fi{resize:none;line-height:1.5}
         <div class="fb-dc"><div class="fb-dm" id="fb-date-label"></div><div class="fb-dd" id="fb-date-dow"></div></div>
         <button class="fb-nav-btn" onclick="moveFbDate(1)">&#8250;</button>
       </div>
+      <!-- Week 선택 드롭다운 -->
+      <div style="margin-bottom:1rem;position:relative">
+        <button onclick="toggleFbWeekDrop()" id="fb-week-drop-btn"
+          style="display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--w20);border:1.5px solid var(--w40);border-radius:var(--rmd);font-family:var(--f);font-size:.85rem;font-weight:700;color:var(--w);cursor:pointer;width:100%;justify-content:space-between">
+          <span id="fb-week-drop-label">Week 1 선택</span>
+          <span id="fb-week-drop-arrow" style="font-size:.75rem;transition:transform .2s">▾</span>
+        </button>
+        <div id="fb-week-drop-menu" style="display:none;position:absolute;top:100%;left:0;right:0;background:linear-gradient(145deg,#B8D5ED,#9EC5E0);border:1.5px solid var(--w40);border-radius:var(--rmd);margin-top:4px;z-index:200;overflow:hidden" id="fb-week-drop-list"></div>
+      </div>
+
       <div class="card">
         <div style="margin-bottom:1rem">
           <label class="fl">오늘 하루 한 줄 회고</label>
@@ -481,9 +498,9 @@ textarea.fi{resize:none;line-height:1.5}
 <script>
 
 // ══════════════════════════════════════════════
-//  Supabase 설정
-const SUPABASE_URL  = 'https://hwvkqhmpinnorwryxgjp.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3dmtxaG1waW5ub3J3cnl4Z2pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MTA4NzAsImV4cCI6MjA5MjQ4Njg3MH0.VU_xTxFnu6ld2ySvR4t1NsO0ejBzkjxDKvUGnTrW6yo';
+//  ★ Supabase 설정 — 여기만 수정하면 됩니다 ★
+const SUPABASE_URL  = 'https://여기에붙여넣기.supabase.co';
+const SUPABASE_ANON = '여기에-anon-키-붙여넣기';
 // ══════════════════════════════════════════════
 
 const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -493,7 +510,7 @@ const COLORS = ['#FF8A6B','#7DD4BE','#F5C842','#A29BFE','#FD79A8','#55EFC4','#FD
 const DAY_HDR = ['M','T','W','T','F','S','S'];
 let currentUser = null, goals = [], tasks = {}, feedbacks = {};
 let progressChart = null, matrixChart = null, fbTrendChart = null;
-let fbCurrentDate = new Date(), sleepQuality = 0;
+let fbCurrentDate = new Date(), sleepQuality = 0, fbWeek = 0;
 let dailyView = 'cal', calWeek = 0;
 let currentCycleId = null;
 const _trackCache = {};
@@ -555,9 +572,8 @@ async function doSignup() {
   showLoading('계정 생성 중...');
   const { data, error } = await _sb.auth.signUp({ email, password: pw, options: { data: { display_name: name } } });
   hideLoading();
-  if (error) { err.textContent = error.message; return; }
-  if (data.user && !data.session) {
-    err.textContent = '가입 확인 이메일을 보냈습니다. 이메일을 확인 후 로그인해주세요.';
+  if (error) {
+    err.textContent = error.message.includes('already registered') ? '이미 사용 중인 이메일입니다.' : error.message;
     return;
   }
   await enterApp(data.user);
@@ -797,9 +813,8 @@ function renderWeekly() {
                 oninput="tasks[${oi}][${w}].freqN=Math.min(7,Math.max(1,+this.value||1));saveTaskToDB(${oi},${w})">
                 <span style="font-size:.72rem;color:var(--w70);font-weight:600">회</span>` : ''}
             </div>
-            <button style="font-size:.68rem;color:var(--acc);background:none;border:none;cursor:pointer;font-family:var(--f);font-weight:700;padding:0 0 0 6px"
-              onclick="editWeekCount(${oi})">주차수정</button>
           </div>
+          <!-- 주차수정은 헤더에만 -->
           <div class="task-item ${t.done ? 'done' : ''}" id="ti-${oi}-${w}" onclick="toggleTask(${oi},${w})">
             <div class="tchk">
               <svg class="chk-svg" width="11" height="8" viewBox="0 0 11 8" fill="none">
@@ -820,10 +835,13 @@ function renderWeekly() {
         <div class="drag-handle" onclick="event.stopPropagation()"><span></span><span></span><span></span></div>
         <div class="gdot" style="background:${g.color}"></div>
         <div class="gname">${g.name}</div>
-        <span style="font-size:.7rem;color:var(--w70);font-weight:600;margin-right:4px">${wCount}주</span>
-        <button class="gcollapse open" onclick="event.stopPropagation();toggleWeekBlock(${oi},this.closest('.goal-block-hdr'))">▾</button>
+        <button style="font-size:.68rem;color:var(--acc);background:none;border:none;cursor:pointer;font-family:var(--f);font-weight:700;padding:0 6px 0 0;flex-shrink:0"
+          onclick="event.stopPropagation();editWeekCount(${oi})">주차수정</button>
+        <span style="font-size:.7rem;color:var(--w70);font-weight:600;margin-right:6px;flex-shrink:0">${wCount}주</span>
+        <button class="gcollapse" id="gc-${oi}"
+          onclick="event.stopPropagation();toggleWeekBlock(${oi},this.closest('.goal-block-hdr'))">로 펼치기</button>
       </div>
-      <div class="goal-block-body" id="gb-body-${oi}">${weeksHtml}</div>`;
+      <div class="goal-block-body" id="gb-body-${oi}" style="display:none">${weeksHtml}</div>`;
     c.appendChild(block);
   });
 }
@@ -832,7 +850,7 @@ function toggleWeekBlock(oi, hdr) {
   const btn  = hdr.querySelector('.gcollapse');
   const nowOpen = body.style.display === 'none';
   body.style.display = nowOpen ? 'block' : 'none';
-  if (btn) btn.classList.toggle('open', nowOpen);
+  if (btn) btn.textContent = nowOpen ? '▾ 접기' : '▸ 펼치기';
 }
 async function editWeekCount(oi) {
   const cur = Object.keys(tasks[oi] || {}).length;
@@ -848,6 +866,14 @@ async function editWeekCount(oi) {
 function setFreq(oi, w, freq) {
   if (!tasks[oi] || tasks[oi][w] === undefined) return;
   tasks[oi][w].freq = freq; saveTaskToDB(oi, w); renderWeekly();
+}
+function setFreqAll(oi, freq) {
+  if (!tasks[oi]) return;
+  Object.keys(tasks[oi]).forEach(w => {
+    tasks[oi][w].freq = freq;
+    saveTaskToDB(oi, parseInt(w));
+  });
+  renderWeekly();
 }
 async function toggleTask(oi, w) {
   if (!tasks[oi] || tasks[oi][w] === undefined) return;
@@ -984,16 +1010,18 @@ function switchDailyView(v) {
 function renderDailyPage() { const t = getTrackers(); renderDailyCal(t); if (dailyView === 'stat') renderDailyStat(); }
 function renderDailyCal(trackers) {
   const c = document.getElementById('daily-cal');
-  if (!trackers.length) { c.innerHTML = `<div class="empty-state"><div class="esb">연결된 계획이 없어요</div>주간계획 탭에서 목표 입력을 채우면 트래커가 생성됩니다.</div>`; return; }
   const maxW = Math.max(...goals.map((_, oi) => Object.keys(tasks[oi] || {}).length), 1);
   const week = Math.min(calWeek, maxW - 1);
+  // 현재 week에 해당하는 트래커만 필터 (key가 g{oi}w{week} 형식)
+  const weekTrackers = trackers.filter(tr => tr.w === week || tr.key.endsWith('w' + week) || (tr.key.startsWith('custom_')));
+  if (!weekTrackers.length) { c.innerHTML = `<div class="empty-state"><div class="esb">이번 주 계획이 없어요</div>주간계획 탭에서 Week ${week+1} 목표를 입력해주세요.</div>`; return; }
   let html = `<div class="cal-nav">
     <button class="cal-nav-btn" onclick="moveCalWeek(-1)">‹</button>
     <span class="cal-wk-lbl">WEEK ${week + 1}</span>
     <button class="cal-nav-btn" onclick="moveCalWeek(1)">›</button>
   </div>
   <div class="cal-day-row">${DAY_HDR.map(d => `<div class="cal-day-hdr">${d}</div>`).join('')}</div>`;
-  trackers.forEach(tr => {
+  weekTrackers.forEach(tr => {
     const saved = ((_trackCache[tr.key] || {})[week]) || [];
     html += `<div class="cal-tr-row">
       <div class="cal-tr-lbl" title="${tr.label}">${tr.label}</div>
@@ -1085,7 +1113,53 @@ function calcSleepTotal() {
   el.textContent = `총 ${Math.floor(mins/60)}시간${mins%60 ? (mins%60)+'분' : ''}`;
 }
 function fbDateKey(d) { return d.toISOString().slice(0, 10); }
-function renderFeedback() { fbCurrentDate = fbCurrentDate || new Date(); updateFbUI(); }
+function renderFeedback() {
+  fbCurrentDate = fbCurrentDate || new Date();
+  renderFbWeekSelector();
+  updateFbUI();
+}
+
+function renderFbWeekSelector() {
+  const btn   = document.getElementById('fb-week-drop-btn');
+  const label = document.getElementById('fb-week-drop-label');
+  const list  = document.getElementById('fb-week-drop-list');
+  if (!label || !list) return;
+  const maxW = goals.length
+    ? Math.max(...goals.map((_, oi) => Object.keys(tasks[oi] || {}).length), 1)
+    : 0;
+  if (maxW === 0) { label.textContent = '주차 없음'; list.innerHTML = ''; return; }
+  // 현재 선택 라벨 업데이트
+  label.textContent = `Week ${fbWeek + 1} 보는 중`;
+  // 드롭다운 아이템 생성
+  list.innerHTML = Array.from({ length: maxW }, (_, w) => `
+    <button onclick="setFbWeek(${w})"
+      style="display:block;width:100%;padding:10px 16px;background:${fbWeek===w?'var(--w20)':'none'};
+      border:none;border-bottom:1px solid var(--w20);font-family:var(--f);font-size:.85rem;
+      font-weight:${fbWeek===w?'800':'600'};color:${fbWeek===w?'var(--w)':'var(--w70)'};
+      cursor:pointer;text-align:left">
+      Week ${w + 1}${fbWeek===w?' ✓':''}
+    </button>`).join('');
+}
+
+function toggleFbWeekDrop() {
+  const menu  = document.getElementById('fb-week-drop-list');
+  const arrow = document.getElementById('fb-week-drop-arrow');
+  if (!menu) return;
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function setFbWeek(w) {
+  fbWeek = w;
+  // 드롭다운 닫기
+  const menu  = document.getElementById('fb-week-drop-list');
+  const arrow = document.getElementById('fb-week-drop-arrow');
+  if (menu)  menu.style.display  = 'none';
+  if (arrow) arrow.style.transform = '';
+  renderFbWeekSelector();
+  renderFbTasks((feedbacks.daily || {})[fbDateKey(fbCurrentDate)]?.taskScores || {});
+}
 function updateFbUI() {
   const key = fbDateKey(fbCurrentDate);
   const DOW = ['일','월','화','수','목','금','토'];
@@ -1099,6 +1173,7 @@ function updateFbUI() {
   document.getElementById('fb-sleep-am-h').value = sl.amH || '';
   document.getElementById('fb-sleep-am-m').value = sl.amM || '';
   calcSleepTotal(); sleepQuality = saved.sleepQ || 0; updateStars();
+  renderFbWeekSelector();
   renderFbTasks(saved.taskScores || {}); renderFbLog();
 }
 function moveFbDate(dir) {
@@ -1109,9 +1184,13 @@ function moveFbDate(dir) {
 function setSleepQ(n)  { sleepQuality = n; updateStars(); }
 function updateStars() { document.querySelectorAll('.sleep-star').forEach((s, i) => s.classList.toggle('lit', i < sleepQuality)); }
 function renderFbTasks(taskScores) {
-  const c = document.getElementById('fb-tasks-list'); const trackers = getTrackers();
-  if (!trackers.length) { c.innerHTML = `<div style="font-size:.8rem;color:var(--w70);margin-top:.5rem;border-top:1px solid var(--w20);padding-top:12px">주간 계획에서 목표를 입력하면 여기에 표시됩니다.</div>`; return; }
-  c.innerHTML = `<div style="font-size:.78rem;font-weight:700;color:var(--w70);margin-bottom:4px;margin-top:.5rem;border-top:1px solid var(--w20);padding-top:12px">오늘 수행한 항목별 회고</div>
+  const c = document.getElementById('fb-tasks-list');
+  const allTrackers = getTrackers();
+  // 현재 선택된 fbWeek에 해당하는 트래커만 필터
+  const trackers = allTrackers.filter(tr => tr.w === fbWeek || tr.key.startsWith('custom_'));
+  if (!allTrackers.length) { c.innerHTML = `<div style="font-size:.8rem;color:var(--w70);margin-top:.5rem;border-top:1px solid var(--w20);padding-top:12px">주간 계획에서 목표를 입력하면 여기에 표시됩니다.</div>`; return; }
+  if (!trackers.length) { c.innerHTML = `<div style="font-size:.8rem;color:var(--w70);margin-top:.5rem;border-top:1px solid var(--w20);padding-top:12px">Week ${fbWeek+1}에 입력된 목표가 없어요. 주간계획 탭에서 목표를 입력해주세요.</div>`; return; }
+  c.innerHTML = `<div style="font-size:.78rem;font-weight:700;color:var(--w70);margin-bottom:4px;margin-top:.5rem;border-top:1px solid var(--w20);padding-top:12px">Week ${fbWeek+1} 항목별 회고</div>
     <div style="font-size:.7rem;color:var(--w70);margin-bottom:8px">에너지 · 만족도는 각 10점 만점으로 입력해주세요</div>`
     + trackers.map(tr => {
       const sc = taskScores[tr.key] || { energy: 5, sat: 5 };
